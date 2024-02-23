@@ -29,7 +29,7 @@ def user_create(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 def user_detail(request, pk):
     try:
-        user = UserAccount.objects.get(pk=pk)
+        user = UserAccount.objects.get(user_id=pk)
     except UserAccount.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
