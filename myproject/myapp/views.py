@@ -121,7 +121,25 @@ def LinearRegModel(request, identifier):
     predictions = LinearRegressionModel(identifier,'Close', end)
     return JsonResponse({'result': predictions})
 
+def stock_news(request, identifier):
+    symbol, company_name = get_symbol_from_name(identifier)
+    if symbol == None:
+        # If no symbol is found, assume the identifier might already be a symbol
+        symbol = identifier.upper()
+        company_name = identifier  # Fallback to the identifier if the name resolution fails
 
+    stock = yf.Ticker(symbol)
+    return JsonResponse({'stock_news': stock.news})
+
+def stock_info(request, identifier):
+    symbol, company_name = get_symbol_from_name(identifier)
+    if symbol == None:
+        # If no symbol is found, assume the identifier might already be a symbol
+        symbol = identifier.upper()
+        company_name = identifier  # Fallback to the identifier if the name resolution fails
+
+    stock = yf.Ticker(symbol)
+    return JsonResponse({'stock_info': stock.info})
 
 
 
