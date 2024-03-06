@@ -9,6 +9,15 @@ from .models import Stock
 import yfinance as yf 
 import requests
 from django.conf import settings 
+from datetime import datetime 
+from .ML_Function.LinearRegressionModel import LinearRegressionModel
+import numpy as np
+from pandas_datareader import data as pdr
+
+# For Machine Learning Model
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import MinMaxScaler
 
 @api_view(['GET'])
 def user_list(request):
@@ -64,17 +73,31 @@ def get_symbol_from_name(name):
         return matches[0]['1. symbol'], matches[0]['2. name']
     return None, None
 
+def get_symbol(request, name):
+    symbol, company_name = get_symbol_from_name(name)
+    if symbol == None:
+        return JsonResponse({'error': f"No symbol found for '{name}'."}, status=404)
+    else:
+        return JsonResponse(symbol,  safe=False)
+    
+
 def stock_detail(request, identifier):
     # First, try to resolve the identifier as a company name to a symbol
     symbol, company_name = get_symbol_from_name(identifier)
-    if not symbol:
+    if symbol == None:
         # If no symbol is found, assume the identifier might already be a symbol
         symbol = identifier.upper()
         company_name = identifier  # Fallback to the identifier if the name resolution fails
+        
 
     # Fetch stock information using yfinance
+    time = request.GET.get('time')
+    if time :
+        time_period = f"{time}y"
+    else:
+        time_period = "1y"    
     stock = yf.Ticker(symbol)
-    hist = stock.history(period="30d")
+    hist = stock.history(period=time_period)
 
     if hist.empty:
         return JsonResponse({'error': f"No historical data found for '{identifier}'."}, status=404)
@@ -92,6 +115,14 @@ def stock_detail(request, identifier):
     }
 
     return JsonResponse(response_data)
+
+def LinearRegModel(request, identifier):
+    end = datetime.now()
+    predictions = LinearRegressionModel(identifier,'Close', end)
+    return JsonResponse({'result': predictions})
+
+
+
 
 
 
