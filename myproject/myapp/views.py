@@ -9,8 +9,9 @@ from .models import Stock
 import yfinance as yf 
 import requests
 from django.conf import settings 
-from datetime import datetime 
-from .ML_Function.LinearRegressionModel import LinearRegressionModel
+from datetime import datetime, timedelta 
+# from .ML_Function.LinearRegressionModel import LinearRegressionModel
+from .ML_Function.LinearRegression import LinearRegressionModel
 import numpy as np
 from pandas_datareader import data as pdr
 
@@ -118,8 +119,13 @@ def stock_detail(request, identifier):
 
 def LinearRegModel(request, identifier):
     end = datetime.now()
-    predictions = LinearRegressionModel(identifier,'Close', end)
-    return JsonResponse({'result': predictions})
+    futureDays = 30     #By Default 30 days
+    days = request.GET.get('days')         #Get query parms
+    if days :
+        futureDays = int(days)          #If user wants more then assign future days
+    predictions = LinearRegressionModel(identifier,'Close', end, futureDays)
+    future_dates_with_data = [(end + timedelta(days=i+1), predictions[i]) for i in range(len(predictions))]
+    return JsonResponse({"results": future_dates_with_data})
 
 def stock_news(request, identifier):
     symbol, company_name = get_symbol_from_name(identifier)
